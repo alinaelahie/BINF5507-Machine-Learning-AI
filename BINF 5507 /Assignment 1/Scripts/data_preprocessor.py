@@ -10,6 +10,10 @@ from sklearn.metrics import classification_report, accuracy_score
 
 # 1. Impute Missing Values
 def impute_missing_values(data, strategy='mean'):
+    #select numeric and categorical columns seperatley
+    numeric_data = data.select_dtypes(include=['number'])
+    categorical_data = data.select_dtypes(exclude=['number'])
+
     """
     Fill missing values in the dataset.
     :param data: pandas DataFrame
@@ -17,13 +21,17 @@ def impute_missing_values(data, strategy='mean'):
     :return: pandas DataFrame
     """
     if strategy == 'mean': # replace missing values with the mean of each column
-        data = data.fillna(data.mean())
+        data[numeric_data.columns] = numeric_data.fillna(numeric_data.mean())
     elif strategy == 'median': #replace missing values with the median of each column
-        data = data.fillna(data.median())
-    elif strategy == 'mode': #replace missing values with the most frequent value (mode) of each column
-        data = data.fillna(data.mode().iloc[0])
+        data[numeric_data.columns] = numeric_data.fillna(numeric_data.median())
     else:
         raise ValueError(f"Unknown strategy {strategy}. Use 'mean', 'median', or 'mode'.") #raise error if value is not from those mentioned above (mean,median,mode)
+    #Categorical columns (impute with mode)
+    categorical_data = data.select_dtypes(exclude=['number'])
+    for col in categorical_data.columns:
+        mode = categorical_data[col].mode()[0]
+        data[col] = categorical_data[col].fillna(mode)
+
     return data
 
 # 2. Remove Duplicates
